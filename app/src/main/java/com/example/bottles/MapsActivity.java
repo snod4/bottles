@@ -2,9 +2,11 @@ package com.example.bottles;
 
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 
+import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,12 +21,17 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -72,7 +79,8 @@ public class MapsActivity extends AppCompatActivity
     private String[] likelyPlaceAddresses;
     private List[] likelyPlaceAttributions;
     private LatLng[] likelyPlaceLatLngs;
-
+    private LocationCallback locationCallback;
+    private Circle circle;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,7 +97,19 @@ public class MapsActivity extends AppCompatActivity
 //        // Construct a PlacesClient
 //        Places.initialize(getApplicationContext(), getString(R.string.maps_api_key));
 //        placesClient = Places.createClient(this);
-
+        locationCallback = new LocationCallback(){
+            @Override
+        public void onLocationResult(LocationResult locationResult) {
+            if (locationResult == null) {
+                return;
+            }
+            for (Location location : locationResult.getLocations()) {
+                if(circle != null){
+                    circle.setCenter(new LatLng(location.getLatitude(), location.getLongitude()));
+                }
+            }
+        }
+        };
         // Construct a FusedLocationProviderClient.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -203,6 +223,14 @@ public class MapsActivity extends AppCompatActivity
                                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                         new LatLng(lastKnownLocation.getLatitude(),
                                                 lastKnownLocation.getLongitude()), DEFAULT_ZOOM));
+                                 circle = map.addCircle(new CircleOptions()
+                                        .center(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()))
+                                        .radius(100)
+                                        .strokeColor(Color.BLACK));
+                                fusedLocationProviderClient.requestLocationUpdates(LocationRequest.create().setInterval(1000),
+                                        locationCallback,
+                                        Looper.getMainLooper());
+
                             }
                         } else {
                             Log.d(TAG, "Current location is null. Using defaults.");

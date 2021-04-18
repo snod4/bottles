@@ -154,7 +154,8 @@ public class MapsActivity extends AppCompatActivity
                                                             .position(new LatLng(latitude, longitude))
                                                             .draggable(false)
                                                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.bottleicon2)));
-                                                    thisMarker.setTag(message);
+                                                    thisMarker.setTag(docId);
+                                                    thisMarker.setSnippet(message);
                                                     bottleMap.put(docId, thisMarker);
                                                     markToIdMap.put(thisMarker,docId);
                                                     idToBottle.put(docId, bottle);
@@ -193,12 +194,12 @@ public class MapsActivity extends AppCompatActivity
                             public void onComplete(@NonNull Task<Location> task) {
                                 if (task.isSuccessful()) {
                                     lastKnownLocation = task.getResult();
-                                    AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this, R.style.AlertDialogTheme);
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this, R.style.BottlesTheme);
                                     builder.setTitle("Write Message");
 
                                     // Set up the input
                                     final EditText input = new EditText(MapsActivity.this);
-                                    input.setTextColor(Color.parseColor("#6A82B9")); // accent color
+                                    input.setTextColor(Color.parseColor("#FF000000")); // accent color
 
 
                                     // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
@@ -472,13 +473,14 @@ public class MapsActivity extends AppCompatActivity
         Log.i("Main_ONclick:",Double.toString(Math.abs(mLat - currentLat)));
         Log.i("Main_ONclick:",Double.toString(Math.abs(mLongitude - currentLong)));
         if(Math.abs(mLat - currentLat) < RANGE && Math.abs(mLongitude - currentLong) < RANGE ){
-            AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this, R.style.AlertDialogTheme);
+            AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this, R.style.BottlesTheme);
             builder.setTitle("");
 
             // Set up the input
-            final TextView input = new EditText(MapsActivity.this);
-            input.setTextColor(Color.parseColor("#6A82B9")); // accent color
-            input.setText(msg);
+            final TextView input = new TextView(MapsActivity.this);
+            input.setTextColor(Color.parseColor("#FF000000"));
+            input.setText(marker.getSnippet());
+
             // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
             builder.setView(input);
 

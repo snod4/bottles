@@ -16,7 +16,7 @@
         android:layout_marginTop="20dp"
         android:layout_marginRight="20dp"
         android:layout_marginBottom="20dp"
-        android:background="@drawable/add_bottle"
+        android:background="@drawable/writeicon"
         android:padding="10dp"
         android:paddingRight="10dp" />
 </fragment>

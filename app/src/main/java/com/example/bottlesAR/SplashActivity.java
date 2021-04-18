@@ -1,11 +1,8 @@
-package com.example.bottles;
+package com.example.bottlesAR;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.telecom.Call;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 public class SplashActivity extends Activity {
     @Override

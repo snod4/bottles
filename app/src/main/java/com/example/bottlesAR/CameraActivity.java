@@ -1,12 +1,7 @@
-package com.example.bottles;
+package com.example.bottlesAR;
 
-import android.app.Activity;
-import android.app.ActivityManager;
-import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.Toast;
 

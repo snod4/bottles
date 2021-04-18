@@ -1,4 +1,4 @@
-package com.example.bottles;
+package com.example.bottlesAR;
 
 import org.junit.Test;
 

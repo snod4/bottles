@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.bottles">
+    package="com.example.bottlesAR">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
@@ -44,7 +44,7 @@
 
         <activity
             android:name=".CameraActivity"
-            android:label="Bottles"
+            android:label="BottlesAR"
             android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

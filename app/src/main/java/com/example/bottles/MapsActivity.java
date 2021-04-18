@@ -98,7 +98,7 @@ public class MapsActivity extends AppCompatActivity
     private LocationCallback locationCallback;
     private Circle circle;
     private String m_Text = "";
-    //private static HashMap<Bottle, Bottle> bottleMap = new HashMap<>();
+    private static HashMap<String, Marker> bottleMap = new HashMap<>();
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -125,9 +125,9 @@ public class MapsActivity extends AppCompatActivity
                     return;
                 }
                 for (Location location : locationResult.getLocations()) {
-                    if (circle != null) {
-                        circle.setCenter(new LatLng(location.getLatitude(), location.getLongitude()));
-                    }
+//                    if (circle != null) {
+//                        circle.setCenter(new LatLng(location.getLatitude(), location.getLongitude()));
+//                    }
                     db.collection("bottle")
                             .get()
                             .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -145,11 +145,13 @@ public class MapsActivity extends AppCompatActivity
                                                 String docId = document.getId();
                                                 Bottle b = new Bottle(docId, message, latitude, longitude);
                                              //   bottleMap.put(b, b);
-                                               Marker thisMarker = map.addMarker(new MarkerOptions()
-                                                        .position(new LatLng(latitude, longitude))
-                                                        .draggable(false)
-                                                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.bottleicon2)));
-                                                thisMarker.setTag(docId);
+                                                if(bottleMap.get(docId) == null) {
+                                                    Marker thisMarker = map.addMarker(new MarkerOptions()
+                                                            .position(new LatLng(latitude, longitude))
+                                                            .draggable(false)
+                                                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.bottleicon2)));
+                                                    thisMarker.setTag(docId);
+                                                }
 
                                             }
                                         }
@@ -356,10 +358,10 @@ public class MapsActivity extends AppCompatActivity
                                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                         new LatLng(lastKnownLocation.getLatitude(),
                                                 lastKnownLocation.getLongitude()), DEFAULT_ZOOM));
-                                 circle = map.addCircle(new CircleOptions()
-                                        .center(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()))
-                                        .radius(RADIUS)
-                                        .strokeColor(Color.BLACK));
+//                                 circle = map.addCircle(new CircleOptions()
+//                                        .center(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()))
+//                                        .radius(RADIUS)
+//                                        .strokeColor(Color.BLACK));
                                 fusedLocationProviderClient.requestLocationUpdates(LocationRequest.create().setInterval(1000),
                                         locationCallback,
                                         Looper.getMainLooper());
@@ -477,6 +479,7 @@ public class MapsActivity extends AppCompatActivity
                             db.collection("bottle")
                                     .document((String)marker.getTag())
                                     .delete();
+                            bottleMap.remove(marker.getTag());
                             marker.remove();
                         }
                     });

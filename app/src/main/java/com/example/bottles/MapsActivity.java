@@ -473,6 +473,13 @@ public class MapsActivity extends AppCompatActivity
             // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
             builder.setView(input);
 
+            String docId = markToIdMap.get(marker);
+            db.collection("bottle")
+                    .document(docId)
+                    .delete();
+            bottleMap.remove(docId);
+            markToIdMap.remove(marker);
+            marker.remove();
 
             // Inflate and set the layout for the dialog
             // Pass null as the parent view because its going in the dialog layout
@@ -485,13 +492,6 @@ public class MapsActivity extends AppCompatActivity
                     .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            String docId = markToIdMap.get(marker);
-                            db.collection("bottle")
-                                    .document(docId)
-                                    .delete();
-                            bottleMap.remove(docId);
-                            markToIdMap.remove(marker);
-                            marker.remove();
                         }
                     });
 

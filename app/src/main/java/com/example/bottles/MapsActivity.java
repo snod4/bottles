@@ -100,6 +100,7 @@ public class MapsActivity extends AppCompatActivity
     private String m_Text = "";
     private static HashMap<String, Marker> bottleMap = new HashMap<>();
     private static HashMap<Marker, String> markToIdMap = new HashMap<>();
+    private static HashMap<String, Bottle> idToBottle = new HashMap<>();
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -145,6 +146,7 @@ public class MapsActivity extends AppCompatActivity
                                                 double longitude = (double) document.get("Longitude");
                                                 String message = (String) document.get("Message");
                                                 String docId = document.getId();
+                                                Bottle bottle = new Bottle(docId, message, latitude, longitude);
 
                                              //   bottleMap.put(b, b);
                                                 //if(bottleMap.get(docId) == null) {
@@ -152,9 +154,10 @@ public class MapsActivity extends AppCompatActivity
                                                             .position(new LatLng(latitude, longitude))
                                                             .draggable(false)
                                                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.bottleicon2)));
-                                                    thisMarker.setTag(docId);
+                                                    thisMarker.setTag(message);
                                                     bottleMap.put(docId, thisMarker);
                                                     markToIdMap.put(thisMarker,docId);
+                                                    idToBottle.put(docId, bottle);
                                                 //}
 
                                             }
@@ -454,6 +457,14 @@ public class MapsActivity extends AppCompatActivity
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        String docId = markToIdMap.get(marker);
+
+        if(docId == null){
+            return false;
+        }
+
+        String msg = idToBottle.get(docId).getMessage();
+
         double mLat = marker.getPosition().latitude;
         double mLongitude = marker.getPosition().longitude;
         double currentLat = lastKnownLocation.getLatitude();
@@ -466,7 +477,8 @@ public class MapsActivity extends AppCompatActivity
 
             // Set up the input
             final TextView input = new EditText(MapsActivity.this);
-
+            input.setTextColor(Color.parseColor("#6A82B9")); // accent color
+            input.setText(msg);
             // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
             builder.setView(input);
 
@@ -482,12 +494,13 @@ public class MapsActivity extends AppCompatActivity
                     .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            String docId = markToIdMap.get(marker);
+                            //might be issue where user trys to delete something which is already gone?
                             db.collection("bottle")
                                     .document(docId)
                                     .delete();
                             bottleMap.remove(docId);
                             markToIdMap.remove(marker);
+                            idToBottle.remove(docId);
                             marker.remove();
                         }
                     });

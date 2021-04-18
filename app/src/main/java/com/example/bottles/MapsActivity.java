@@ -75,7 +75,7 @@ public class MapsActivity extends AppCompatActivity
     // A default location (Sydney, Australia) and default zoom to use when location permission is
     // not granted.
     private final LatLng defaultLocation = new LatLng(-33.8523341, 151.2106085);
-    private static final int DEFAULT_ZOOM = 15;
+    private static final int DEFAULT_ZOOM = 17;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean locationPermissionGranted;
 
@@ -135,7 +135,6 @@ public class MapsActivity extends AppCompatActivity
                                 public void onComplete(@NonNull Task<QuerySnapshot> task) {
                                     if (task.isSuccessful()) {
                                         //bottleMap.clear();
-                                        map.clear();
                                         for (QueryDocumentSnapshot document : task.getResult()) {
                                             Log.d("Main:", document.getData().toString());
                                             if(!document.getData().isEmpty()) {
@@ -151,6 +150,7 @@ public class MapsActivity extends AppCompatActivity
                                                             .draggable(false)
                                                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.bottleicon2)));
                                                     thisMarker.setTag(docId);
+                                                    bottleMap.put(docId, thisMarker);
                                                 }
 
                                             }
@@ -476,6 +476,7 @@ public class MapsActivity extends AppCompatActivity
                     .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+
                             db.collection("bottle")
                                     .document((String)marker.getTag())
                                     .delete();

@@ -32,7 +32,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
 dependencies {
-    implementation 'org.mongodb:mongodb-driver-sync:4.2.3'
+    implementation("com.gorisse.thomas.sceneform:sceneform:1.18.9")
     implementation 'com.google.android.libraries.places:places:2.4.0'
     implementation "com.google.android.gms:play-services-location:15.0.1"
     implementation 'androidx.appcompat:appcompat:1.2.0'

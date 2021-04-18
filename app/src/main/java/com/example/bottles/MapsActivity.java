@@ -130,7 +130,7 @@ public class MapsActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-                builder.setTitle("Title");
+                builder.setTitle("Message");
 
                 // Set up the input
                 final EditText input = new EditText(MapsActivity.this);

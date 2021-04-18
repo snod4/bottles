@@ -97,7 +97,7 @@ public class MapsActivity extends AppCompatActivity
     private LocationCallback locationCallback;
     private Circle circle;
     private String m_Text = "";
-    private static HashMap<Bottle, Bottle> bottleMap = new HashMap<>();
+    //private static HashMap<Bottle, Bottle> bottleMap = new HashMap<>();
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -133,7 +133,7 @@ public class MapsActivity extends AppCompatActivity
                                 @Override
                                 public void onComplete(@NonNull Task<QuerySnapshot> task) {
                                     if (task.isSuccessful()) {
-                                        bottleMap.clear();
+                                        //bottleMap.clear();
                                         map.clear();
                                         for (QueryDocumentSnapshot document : task.getResult()) {
                                             Log.d("Main:", document.getData().toString());
@@ -143,7 +143,7 @@ public class MapsActivity extends AppCompatActivity
                                                 String message = (String) document.get("Message");
                                                 String docId = document.getId();
                                                 Bottle b = new Bottle(docId, message, latitude, longitude);
-                                                bottleMap.put(b, b);
+                                             //   bottleMap.put(b, b);
                                                Marker thisMarker = map.addMarker(new MarkerOptions()
                                                         .position(new LatLng(latitude, longitude))
                                                         .draggable(false));
@@ -482,7 +482,7 @@ public class MapsActivity extends AppCompatActivity
             builder.show();
         }
         else{
-            
+
             Toast.makeText(MapsActivity.this, "Out of range", Toast.LENGTH_SHORT).show();
         }
         return false;

@@ -18,7 +18,7 @@ android {
     }
 
     buildTypes {
-        def appId = "bottle"  // Replace with proper Application ID
+        def appId = "bottle-kyune"  // Replace with proper Application ID
         debug {
             buildConfigField "String", "MONGODB_REALM_APP_ID", "\"${appId}\""
         }

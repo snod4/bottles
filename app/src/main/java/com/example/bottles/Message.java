@@ -21,4 +21,8 @@ public class Message extends RealmObject {
         this.lat = lat;
         this.lon = lon;
     }
+
+    public Message() {
+
+    }
 }

@@ -43,10 +43,41 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import io.realm.OrderedCollectionChangeSet;
 
+import org.bson.Document;
+import org.bson.types.ObjectId;
+import android.os.Bundle;
+import androidx.appcompat.app.AppCompatActivity;
+import android.util.Log;
+import io.realm.OrderedRealmCollectionChangeListener;
+import io.realm.Realm;
+import io.realm.RealmResults;
+import io.realm.mongodb.App;
+import io.realm.mongodb.AppConfiguration;
+import io.realm.mongodb.Credentials;
+import io.realm.mongodb.User;
+import io.realm.mongodb.mongo.MongoClient;
+import io.realm.mongodb.mongo.MongoCollection;
+import io.realm.mongodb.mongo.MongoDatabase;
+import io.realm.mongodb.sync.SyncConfiguration;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+
+
+import org.bson.Document;
 
 import java.util.Arrays;
 import java.util.List;
+
+import io.realm.Realm;
+import io.realm.mongodb.App;
+import io.realm.mongodb.AppConfiguration;
+import io.realm.mongodb.Credentials;
+import io.realm.mongodb.User;
+import io.realm.mongodb.mongo.MongoCollection;
 
 /**
  * An activity that displays a map showing the place at the device's current location.
@@ -87,10 +118,46 @@ public class MapsActivity extends AppCompatActivity
     private LocationCallback locationCallback;
     private Circle circle;
     private String m_Text = "";
+
+    Realm uiThreadRealm;
+    App app;
+    MongoDatabase mongoDatabase;
+    MongoClient mongoClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Realm.init(this); // context, usually an Activity or Application
+        app = new App(new AppConfiguration.Builder(BuildConfig.MONGODB_REALM_APP_ID)
+                .build());
+        Credentials credentials = Credentials.anonymous();
+        app.loginAsync(credentials, result -> {
+            if (result.isSuccess()) {
+                Log.v("QUICKSTART", "Successfully authenticated anonymously.");
+                User user = app.currentUser();
+                mongoClient = user.getMongoClient("mongodb-atlas");
+                mongoDatabase = mongoClient.getDatabase("bottle");
+                MongoCollection<Document> mongoCollection = mongoDatabase.getCollection("messages");
+                mongoCollection.insertOne(new Document("author", "Liam")
+                        .append("_id", new ObjectId())
+                        .append("_partitionKey", new ObjectId())
+                        .append("title", "Oof")
+                        .append("body", "Gave up on the squad")
+                        .append("lat", (double) 1)
+                        .append("lon", (double) 10))
+                        .getAsync(res -> {
+                            if (res.isSuccess()) {
+                                Log.v("Data","Data Inserted Successfully");
+                            }
+                            else {
+                                Log.v("Data","Error:"+res.getError().toString());
+                            }
+                        });
+            } else {
+                Log.e("QUICKSTART", "Failed to log in. Error: " + result.getError());
+            }
+        });
 
 
         // Retrieve location and camera position from saved instance state.

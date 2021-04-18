@@ -99,6 +99,7 @@ public class MapsActivity extends AppCompatActivity
     private Circle circle;
     private String m_Text = "";
     private static HashMap<String, Marker> bottleMap = new HashMap<>();
+    private static HashMap<Marker, String> markToIdMap = new HashMap<>();
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -134,7 +135,9 @@ public class MapsActivity extends AppCompatActivity
                                 @Override
                                 public void onComplete(@NonNull Task<QuerySnapshot> task) {
                                     if (task.isSuccessful()) {
-                                        //bottleMap.clear();
+                                        bottleMap.clear();
+                                        markToIdMap.clear();
+                                        map.clear();
                                         for (QueryDocumentSnapshot document : task.getResult()) {
                                             Log.d("Main:", document.getData().toString());
                                             if(!document.getData().isEmpty()) {
@@ -142,16 +145,17 @@ public class MapsActivity extends AppCompatActivity
                                                 double longitude = (double) document.get("Longitude");
                                                 String message = (String) document.get("Message");
                                                 String docId = document.getId();
-                                                Bottle b = new Bottle(docId, message, latitude, longitude);
+
                                              //   bottleMap.put(b, b);
-                                                if(bottleMap.get(docId) == null) {
+                                                //if(bottleMap.get(docId) == null) {
                                                     Marker thisMarker = map.addMarker(new MarkerOptions()
                                                             .position(new LatLng(latitude, longitude))
                                                             .draggable(false)
                                                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.bottleicon2)));
                                                     thisMarker.setTag(docId);
                                                     bottleMap.put(docId, thisMarker);
-                                                }
+                                                    markToIdMap.put(thisMarker,docId);
+                                                //}
 
                                             }
                                         }
@@ -476,11 +480,12 @@ public class MapsActivity extends AppCompatActivity
                     .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-
+                            String docId = markToIdMap.get(marker);
                             db.collection("bottle")
-                                    .document((String)marker.getTag())
+                                    .document(docId)
                                     .delete();
-                            bottleMap.remove(marker.getTag());
+                            bottleMap.remove(docId);
+                            markToIdMap.remove(marker);
                             marker.remove();
                         }
                     });

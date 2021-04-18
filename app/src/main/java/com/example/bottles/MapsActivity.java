@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -43,6 +44,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.common.collect.Maps;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 
@@ -109,18 +111,18 @@ public class MapsActivity extends AppCompatActivity
 //        // Construct a PlacesClient
 //        Places.initialize(getApplicationContext(), getString(R.string.maps_api_key));
 //        placesClient = Places.createClient(this);
-        locationCallback = new LocationCallback(){
+        locationCallback = new LocationCallback() {
             @Override
-        public void onLocationResult(LocationResult locationResult) {
-            if (locationResult == null) {
-                return;
-            }
-            for (Location location : locationResult.getLocations()) {
-                if(circle != null){
-                    circle.setCenter(new LatLng(location.getLatitude(), location.getLongitude()));
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    if (circle != null) {
+                        circle.setCenter(new LatLng(location.getLatitude(), location.getLongitude()));
+                    }
                 }
             }
-        }
         };
         // Construct a FusedLocationProviderClient.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -136,43 +138,79 @@ public class MapsActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this, R.style.AlertDialogTheme);
-                builder.setTitle("Write Message");
+                try {
+                    if (locationPermissionGranted) {
+                        Task<Location> locationTask = fusedLocationProviderClient.getLastLocation();
+                        locationTask.addOnCompleteListener(MapsActivity.this, new OnCompleteListener<Location>() {
 
-                // Set up the input
-                final EditText input = new EditText(MapsActivity.this);
-
-                // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-                input.setInputType(InputType.TYPE_CLASS_TEXT);
-                builder.setView(input);
-
-                LayoutInflater inflater = mapFragment.getActivity().getLayoutInflater();
-
-                // Inflate and set the layout for the dialog
-                // Pass null as the parent view because its going in the dialog layout
-                builder.setView(inflater.inflate(R.layout.new_bottle, null))
-                        // Add action buttons
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            m_Text = input.getText().toString();
-                            Map<String, Object> bottle = new HashMap<>();
-                            bottle.put("Message", m_Text);
-                            bottle.put("Latitude", lastKnownLocation.getLatitude());
-                            bottle.put("Longitude", lastKnownLocation.getLongitude());
-                            db.collection("bottle")
-                                    .add(bottle);
-                        }
-                        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
+                            public void onComplete(@NonNull Task<Location> task) {
+                                if (task.isSuccessful()) {
+                                    lastKnownLocation = task.getResult();
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this, R.style.AlertDialogTheme);
+                                    builder.setTitle("Write Message");
+
+                                    // Set up the input
+                                    final EditText input = new EditText(MapsActivity.this);
+
+                                    // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                                    input.setInputType(InputType.TYPE_CLASS_TEXT);
+                                    builder.setView(input);
+
+
+                                    // Inflate and set the layout for the dialog
+                                    // Pass null as the parent view because its going in the dialog layout
+                                    LayoutInflater inflater = mapFragment.getActivity().getLayoutInflater();
+
+                                    builder
+                                            // Add action buttons
+                                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    m_Text = input.getText().toString();
+                                                    if (m_Text.length() == 0) {
+                                                        Toast.makeText(MapsActivity.this, "Cannot write an empty message", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                    else{
+                                                        Toast.makeText(MapsActivity.this, m_Text, Toast.LENGTH_SHORT).show();
+
+                                                        Map<String, Object> bottle = new HashMap<>();
+                                                        bottle.put("Message", m_Text);
+                                                        bottle.put("Latitude", lastKnownLocation.getLatitude());
+                                                        bottle.put("Longitude", lastKnownLocation.getLongitude());
+                                                        db.collection("bottle")
+                                                                .add(bottle);
+                                                    }
+                                                }
+                                            }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.cancel();
+                                        }
+                                    });
+
+                                    builder.show();
+                                } else {
+                                    Toast.makeText(MapsActivity.this, "Could not get location", Toast.LENGTH_SHORT).show();
+
+                                }
                             }
                         });
+                    }
+                    else{
+                        Toast.makeText(MapsActivity.this, "Could not get location", Toast.LENGTH_SHORT).show();
 
-                builder.show();
+                    }
+
+                }
+                catch (SecurityException e) {
+                    Log.e("Error-Main:", e.getMessage());
+                }
+
             }
         });
+
+
     }
 
     /**

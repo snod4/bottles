@@ -11,6 +11,8 @@ import android.os.Looper;
 import android.os.Message;
 import android.text.InputType;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -177,6 +179,7 @@ public class MapsActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        // Adding new bottle button
         Button fab = findViewById(R.id.drop_button);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -469,6 +472,9 @@ public class MapsActivity extends AppCompatActivity
             final TextView input = new TextView(MapsActivity.this);
             input.setTextColor(Color.parseColor("#FF000000"));
             input.setText(marker.getSnippet());
+            input.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+            input.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
+            //input.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimensionPixelSize(R.dimen.txt_size));
 
             // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
             builder.setView(input);

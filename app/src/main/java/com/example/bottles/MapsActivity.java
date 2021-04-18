@@ -43,10 +43,13 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * An activity that displays a map showing the place at the device's current location.
@@ -87,6 +90,9 @@ public class MapsActivity extends AppCompatActivity
     private LocationCallback locationCallback;
     private Circle circle;
     private String m_Text = "";
+
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -150,6 +156,12 @@ public class MapsActivity extends AppCompatActivity
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             m_Text = input.getText().toString();
+                            Map<String, Object> bottle = new HashMap<>();
+                            bottle.put("Message", m_Text);
+                            bottle.put("Latitude", lastKnownLocation.getLatitude());
+                            bottle.put("Longitude", lastKnownLocation.getLongitude());
+                            db.collection("bottle")
+                                    .add(bottle);
                         }
                         }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                             @Override

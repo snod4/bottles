@@ -60,7 +60,7 @@ import java.util.Map;
  * An activity that displays a map showing the place at the device's current location.
  */
 public class MapsActivity extends AppCompatActivity
-        implements OnMapReadyCallback {
+        implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
     private GoogleMap map;
@@ -89,6 +89,7 @@ public class MapsActivity extends AppCompatActivity
     // Used for selecting the current place.
     private static final int M_MAX_ENTRIES = 5;
     private static final int RADIUS = 30;
+    private static final double RANGE = .0002703;
     private String[] likelyPlaceNames;
     private String[] likelyPlaceAddresses;
     private List[] likelyPlaceAttributions;
@@ -143,10 +144,11 @@ public class MapsActivity extends AppCompatActivity
                                                 String docId = document.getId();
                                                 Bottle b = new Bottle(docId, message, latitude, longitude);
                                                 bottleMap.put(b, b);
-                                                map.addMarker(new MarkerOptions()
+                                               Marker thisMarker = map.addMarker(new MarkerOptions()
                                                         .position(new LatLng(latitude, longitude))
-                                                        .draggable(false)
-                                                        .title(message));
+                                                        .draggable(false));
+                                               thisMarker.setTag(docId);
+
                                             }
                                         }
                                     } else {
@@ -246,6 +248,7 @@ public class MapsActivity extends AppCompatActivity
 
     }
 
+
     /**
      * Saves the state of the map when the activity is paused.
      */
@@ -289,6 +292,7 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap map) {
         this.map = map;
+        map.setOnMarkerClickListener(this);
 
         // Use a custom info window adapter to handle multiple lines of text in the
         // info window contents.
@@ -436,5 +440,51 @@ public class MapsActivity extends AppCompatActivity
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
         }
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        double mLat = marker.getPosition().latitude;
+        double mLongitude = marker.getPosition().longitude;
+        double currentLat = lastKnownLocation.getLatitude();
+        double currentLong = lastKnownLocation.getLongitude();
+        Log.i("Main_ONclick:",Double.toString(Math.abs(mLat - currentLat)));
+        Log.i("Main_ONclick:",Double.toString(Math.abs(mLongitude - currentLong)));
+        if(Math.abs(mLat - currentLat) < RANGE && Math.abs(mLongitude - currentLong) < RANGE ){
+            AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this, R.style.AlertDialogTheme);
+            builder.setTitle("");
+
+            // Set up the input
+            final TextView input = new EditText(MapsActivity.this);
+
+            // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+            builder.setView(input);
+
+
+            // Inflate and set the layout for the dialog
+            // Pass null as the parent view because its going in the dialog layout
+            SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.map);
+            LayoutInflater inflater = mapFragment.getActivity().getLayoutInflater();
+
+            builder
+                    // Add action buttons
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            db.collection("bottle")
+                                    .document((String)marker.getTag())
+                                    .delete();
+                            marker.remove();
+                        }
+                    });
+
+            builder.show();
+        }
+        else{
+            
+            Toast.makeText(MapsActivity.this, "Out of range", Toast.LENGTH_SHORT).show();
+        }
+        return false;
     }
 }

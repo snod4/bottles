@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -43,6 +44,9 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 
 import java.util.Arrays;
@@ -66,7 +70,7 @@ public class MapsActivity extends AppCompatActivity
     // A default location (Sydney, Australia) and default zoom to use when location permission is
     // not granted.
     private final LatLng defaultLocation = new LatLng(-33.8523341, 151.2106085);
-    private static final int DEFAULT_ZOOM = 15;
+    private static final int DEFAULT_ZOOM = 17;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean locationPermissionGranted;
 
@@ -87,10 +91,11 @@ public class MapsActivity extends AppCompatActivity
     private LocationCallback locationCallback;
     private Circle circle;
     private String m_Text = "";
+    FirebaseFirestore db;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        db = FirebaseFirestore.getInstance();
         // Retrieve location and camera position from saved instance state.
         if (savedInstanceState != null) {
             lastKnownLocation = savedInstanceState.getParcelable(KEY_LOCATION);
@@ -112,6 +117,21 @@ public class MapsActivity extends AppCompatActivity
             for (Location location : locationResult.getLocations()) {
                 if(circle != null){
                     circle.setCenter(new LatLng(location.getLatitude(), location.getLongitude()));
+                    db.collection("bottle")
+                            .get()
+                            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        for (QueryDocumentSnapshot document : task.getResult()) {
+                                            Log.d(TAG, document.getId() + " => " + document.getData());
+                                            Toast.makeToast
+                                        }
+                                    } else {
+                                        Log.w(TAG, "Error getting documents.", task.getException());
+                                    }
+                                }
+                            });
                 }
             }
         }
@@ -129,30 +149,36 @@ public class MapsActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-                builder.setTitle("Message");
 
-                // Set up the input
-                final EditText input = new EditText(MapsActivity.this);
-                // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-                input.setInputType(InputType.TYPE_CLASS_TEXT);
-                builder.setView(input);
+                        AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
+                        builder.setTitle("Message");
 
-                // Set up the buttons
-                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        m_Text = input.getText().toString();
+                        // Set up the input
+                        final EditText input = new EditText(MapsActivity.this);
+                        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                        input.setInputType(InputType.TYPE_CLASS_TEXT);
+                        builder.setView(input);
+
+                        // Set up the buttons
+                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                m_Text = input.getText().toString();
+                            }
+                        });
+                        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+
+                        builder.show();
                     }
-                });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-
-                builder.show();
+                }
+                catch (SecurityException e){
+                    Log.e("Main", e.getMessage());
+                }
             }
         });
     }
@@ -229,7 +255,7 @@ public class MapsActivity extends AppCompatActivity
 
         // Prompt the user for permission.
         getLocationPermission();
-        
+
         // Turn on the My Location layer and the related control on the map.
         updateLocationUI();
 

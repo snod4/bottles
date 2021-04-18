@@ -36,7 +36,8 @@
 
         <activity
             android:name=".SplashActivity"
-            android:label="Bottles">
+            android:label="Bottles"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

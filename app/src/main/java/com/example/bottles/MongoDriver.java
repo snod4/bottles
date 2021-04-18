@@ -1,4 +1,4 @@
-package com.example.bottles.mongo;
+package com.example.bottles;
 
 import com.mongodb.*;
 import com.mongodb.client.MongoClients;
@@ -25,20 +25,19 @@ import com.mongodb.client.model.geojson.*;
 
 public class MongoDriver {
 
-    private MongoClient mongoClient;
-    private MongoDatabase database;
-    private MongoCollection<Document> places;
+    private static MongoClient mongoClient;
+    private static MongoDatabase database;
+    private static MongoCollection<Document> places;
 
     public static void main(String[] args) {
-        MongoClientURI uri = new MongoClientURI(
-                "mongodb+srv://lidenlia:HKKActkI9JRxVkPO@bottle1.pcbvl.mongodb.net/bottle1?retryWrites=true&w=majority");
+        String uri = "mongodb+srv://lidenlia:HKKActkI9JRxVkPO@bottle1.pcbvl.mongodb.net/bottle1?retryWrites=true&w=majority";
 
-        mongoClient = new MongoClient(uri);
+        mongoClient = MongoClients.create(uri);
         database = mongoClient.getDatabase("sample_geospatial");
         places = database.getCollection("shipwrecks");
 
-        Point testPoint = new Point(9, -80);
-        System.out.println(getNear(testPoint, 200));
+        Point testPoint = new Point( new Position(9, -80));
+
     }
 
     public MongoClient getMongoClient() {
@@ -49,35 +48,10 @@ public class MongoDriver {
         return database;
     }
 
-    public void addPoint(long latitutde, long longitude, String title, String body, String author) {
-        places.insertOne(
-                {
-                        author: author,
-                title: title,
-                body: body,
-                location: {
-            type: "Point",
-                    coordinates: [latitutde, longitude]
-        }
-            }
-        );
-    }
-
-    public Point getNear(Point origin, int minDist, int maxDist) {
-        places.find(
-                {
-                        location: {
-            $nearSphere: {
-                $geometry: {
-                    type: "Point",
-                            coordinates: [origin.latitutde, origin.longitude]
-                },
-                $minDistance: minDist,
-                        $maxDistance: maxDist
-            }
-        }
-            }
-        );
+    public void getNear(long latitude, long longitude, double minDist, double maxDist) {
+        Point origin = new Point (new Position(latitude, longitude));
+        places.find(Filters.near("location", origin, maxDist, minDist))
+                .forEach(doc -> System.out.println(doc.toJson()));
     }
 
 }

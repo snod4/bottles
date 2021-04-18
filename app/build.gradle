@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.application'
+    id 'realm-android'
 }
 
 android {
@@ -17,9 +18,14 @@ android {
     }
 
     buildTypes {
+        def appId = "bottle"  // Replace with proper Application ID
+        debug {
+            buildConfigField "String", "MONGODB_REALM_APP_ID", "\"${appId}\""
+        }
         release {
+            buildConfigField "String", "MONGODB_REALM_APP_ID", "\"${appId}\""
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
     }
     compileOptions {
@@ -28,8 +34,11 @@ android {
     }
 }
 
+realm {
+    syncEnabled = true
+}
+
 dependencies {
-    implementation 'org.mongodb:mongodb-driver-sync:4.2.3'
     implementation 'com.google.android.libraries.places:places:2.4.0'
     implementation "com.google.android.gms:play-services-location:15.0.1"
     implementation 'androidx.appcompat:appcompat:1.2.0'

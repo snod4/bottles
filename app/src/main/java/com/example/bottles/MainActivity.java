@@ -1,6 +1,8 @@
 package com.example.bottles;
 
 import io.realm.OrderedCollectionChangeSet;
+
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,6 +14,9 @@ import io.realm.mongodb.App;
 import io.realm.mongodb.AppConfiguration;
 import io.realm.mongodb.Credentials;
 import io.realm.mongodb.User;
+import io.realm.mongodb.mongo.MongoClient;
+import io.realm.mongodb.mongo.MongoCollection;
+import io.realm.mongodb.mongo.MongoDatabase;
 import io.realm.mongodb.sync.SyncConfiguration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -21,6 +26,9 @@ import java.util.concurrent.FutureTask;
 public class MainActivity extends AppCompatActivity {
     Realm uiThreadRealm;
     App app;
+    MongoDatabase mongoDatabase;
+    MongoClient mongoClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,25 +40,35 @@ public class MainActivity extends AppCompatActivity {
             if (result.isSuccess()) {
                 Log.v("QUICKSTART", "Successfully authenticated anonymously.");
                 User user = app.currentUser();
-                String partitionValue = "My Project";
-                SyncConfiguration config = new SyncConfiguration.Builder(
-                        user,
-                        partitionValue)
-                        .build();
-                uiThreadRealm = Realm.getInstance(config);
-                addChangeListenerToRealm(uiThreadRealm);
-                FutureTask<String> task = new FutureTask(new BackgroundQuickStart(app.currentUser()), "test");
-                ExecutorService executorService = Executors.newFixedThreadPool(2);
-                executorService.execute(task);
+                mongoClient = user.getMongoClient("mongodb-atlas");
+                mongoDatabase = mongoClient.getDatabase("bottle");
+                MongoCollection<Document> mongoCollection = mongoDatabase.getCollection("messages");
+                mongoCollection.insertOne(new Document("author", "Liam")
+                        .append("title", "Oof")
+                        .append("body", "Gave up on the squad")
+                        .append("lat", 1)
+                        .append("lon", 10))
+                        .getAsync(res -> {
+                            if (res.isSuccess()) {
+                                Log.v("Data","Data Inserted Successfully");
+                            }
+                            else {
+                                Log.v("Data","Error:"+res.getError().toString());
+                            }
+                        });
             } else {
                 Log.e("QUICKSTART", "Failed to log in. Error: " + result.getError());
             }
         });
+
+
     }
+
+
     private void addChangeListenerToRealm(Realm realm) {
         // all tasks in the realm
-        RealmResults<Message> tasks = uiThreadRealm.where(Message.class).findAllAsync();
-        tasks.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Message>>() {
+        RealmResults<Message> messages = uiThreadRealm.where(Message.class).findAllAsync();
+        messages.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Message>>() {
             @Override
             public void onChange(RealmResults<Message> collection, OrderedCollectionChangeSet changeSet) {
                 // process deletions in reverse order if maintaining parallel data structures so indices don't change as you iterate
@@ -81,6 +99,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+
+
+    /*
     public class BackgroundQuickStart implements Runnable {
         User user;
         public BackgroundQuickStart(User user) {
@@ -121,4 +143,5 @@ public class MainActivity extends AppCompatActivity {
             backgroundThreadRealm.close();
         }
     }
+     */
 }

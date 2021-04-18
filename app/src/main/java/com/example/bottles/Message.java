@@ -11,12 +11,14 @@ public class Message extends RealmObject {
     private String title;
     private String author;
     private String body;
-    private String location;
+    private long lat;
+    private long lon;
 
-    public Message(String title, String author, String body, String location) {
+    public Message(String title, String author, String body, long lat, long lon) {
         this.title = title;
         this.author = author;
         this.body = body;
-        this.location = location;
+        this.lat = lat;
+        this.lon = lon;
     }
 }

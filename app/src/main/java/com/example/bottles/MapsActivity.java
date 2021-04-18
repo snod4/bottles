@@ -45,10 +45,13 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.common.collect.Maps;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * An activity that displays a map showing the place at the device's current location.
@@ -89,6 +92,9 @@ public class MapsActivity extends AppCompatActivity
     private LocationCallback locationCallback;
     private Circle circle;
     private String m_Text = "";
+
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -131,10 +137,12 @@ public class MapsActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 try {
                     if (locationPermissionGranted) {
                         Task<Location> locationTask = fusedLocationProviderClient.getLastLocation();
                         locationTask.addOnCompleteListener(MapsActivity.this, new OnCompleteListener<Location>() {
+
                             @Override
                             public void onComplete(@NonNull Task<Location> task) {
                                 if (task.isSuccessful()) {
@@ -149,18 +157,29 @@ public class MapsActivity extends AppCompatActivity
                                     input.setInputType(InputType.TYPE_CLASS_TEXT);
                                     builder.setView(input);
 
-                                    LayoutInflater inflater = mapFragment.getActivity().getLayoutInflater();
 
                                     // Inflate and set the layout for the dialog
                                     // Pass null as the parent view because its going in the dialog layout
-                                    builder.setView(inflater.inflate(R.layout.new_bottle, null))
+                                    LayoutInflater inflater = mapFragment.getActivity().getLayoutInflater();
+
+                                    builder
                                             // Add action buttons
                                             .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                                                 @Override
                                                 public void onClick(DialogInterface dialog, int which) {
                                                     m_Text = input.getText().toString();
-                                                    if(m_Text.length() == 0){
+                                                    if (m_Text.length() == 0) {
                                                         Toast.makeText(MapsActivity.this, "Cannot write an empty message", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                    else{
+                                                        Toast.makeText(MapsActivity.this, m_Text, Toast.LENGTH_SHORT).show();
+
+                                                        Map<String, Object> bottle = new HashMap<>();
+                                                        bottle.put("Message", m_Text);
+                                                        bottle.put("Latitude", lastKnownLocation.getLatitude());
+                                                        bottle.put("Longitude", lastKnownLocation.getLongitude());
+                                                        db.collection("bottle")
+                                                                .add(bottle);
                                                     }
                                                 }
                                             }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -171,20 +190,27 @@ public class MapsActivity extends AppCompatActivity
                                     });
 
                                     builder.show();
-                                }
-                                else{
+                                } else {
                                     Toast.makeText(MapsActivity.this, "Could not get location", Toast.LENGTH_SHORT).show();
 
                                 }
                             }
                         });
                     }
-                } catch (SecurityException e) {
+                    else{
+                        Toast.makeText(MapsActivity.this, "Could not get location", Toast.LENGTH_SHORT).show();
+
+                    }
+
+                }
+                catch (SecurityException e) {
                     Log.e("Error-Main:", e.getMessage());
                 }
-            }
 
+            }
         });
+
+
     }
 
     /**

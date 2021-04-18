@@ -8,6 +8,7 @@ import android.location.Location;
 import android.os.Bundle;
 
 import android.os.Looper;
+import android.os.Message;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -46,6 +47,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.common.collect.Maps;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 
 import java.util.Arrays;
@@ -85,6 +88,7 @@ public class MapsActivity extends AppCompatActivity
 
     // Used for selecting the current place.
     private static final int M_MAX_ENTRIES = 5;
+    private static final int RADIUS = 30;
     private String[] likelyPlaceNames;
     private String[] likelyPlaceAddresses;
     private List[] likelyPlaceAttributions;
@@ -92,6 +96,7 @@ public class MapsActivity extends AppCompatActivity
     private LocationCallback locationCallback;
     private Circle circle;
     private String m_Text = "";
+    private static HashMap<Bottle, Bottle> bottleMap = new HashMap<>();
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -121,6 +126,34 @@ public class MapsActivity extends AppCompatActivity
                     if (circle != null) {
                         circle.setCenter(new LatLng(location.getLatitude(), location.getLongitude()));
                     }
+                    db.collection("bottle")
+                            .get()
+                            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        bottleMap.clear();
+                                        map.clear();
+                                        for (QueryDocumentSnapshot document : task.getResult()) {
+                                            Log.d("Main:", document.getData().toString());
+                                            if(!document.getData().isEmpty()) {
+                                                double latitude = (double) document.get("Latitude");
+                                                double longitude = (double) document.get("Longitude");
+                                                String message = (String) document.get("Message");
+                                                String docId = document.getId();
+                                                Bottle b = new Bottle(docId, message, latitude, longitude);
+                                                bottleMap.put(b, b);
+                                                map.addMarker(new MarkerOptions()
+                                                        .position(new LatLng(latitude, longitude))
+                                                        .draggable(false)
+                                                        .title(message));
+                                            }
+                                        }
+                                    } else {
+                                        Log.w(TAG, "Error getting documents.", task.getException());
+                                    }
+                                }
+                            });
                 }
             }
         };
@@ -319,7 +352,7 @@ public class MapsActivity extends AppCompatActivity
                                                 lastKnownLocation.getLongitude()), DEFAULT_ZOOM));
                                  circle = map.addCircle(new CircleOptions()
                                         .center(new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()))
-                                        .radius(100)
+                                        .radius(RADIUS)
                                         .strokeColor(Color.BLACK));
                                 fusedLocationProviderClient.requestLocationUpdates(LocationRequest.create().setInterval(1000),
                                         locationCallback,
